@@ -18,3 +18,7 @@
     "stripe": "^18.5.0"
   }
 }
+"scripts": {
+  "seed:admin": "node scripts/seedAdmin.js"
+}
+
