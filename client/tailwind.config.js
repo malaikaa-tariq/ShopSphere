@@ -1,16 +1,1 @@
-/** @type {import('tailwindcss').Config} */
-export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
-  theme: {
-    extend: {
-      fontFamily: {
-        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-        cursive: ['"Great Vibes"', 'cursive'],
-      },
-    },
-  },
-  plugins: [],
-}
+export default {content:["./index.html","./src/**/*.{js,jsx}"],theme:{extend:{fontFamily:{sans:["Plus Jakarta Sans","sans-serif"],display:["Space Grotesk","sans-serif"]}}},plugins:[]}

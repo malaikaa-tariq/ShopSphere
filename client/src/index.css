@@ -1,6 +1,1 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-body { margin: 0; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
-button, input, textarea, select { outline: none; }
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');\n@tailwind base;@tailwind components;@tailwind utilities;\nbody{margin:0;background:#f7f7fb;color:#10111a;font-family:"Plus Jakarta Sans",sans-serif}button,input,textarea,select{font:inherit}.container-page{max-width:1280px;margin:auto;padding-left:20px;padding-right:20px}.card{border:1px solid #e2e8f0;background:white;border-radius:28px;box-shadow:0 8px 30px rgba(15,23,42,.05)}.input{width:100%;border:1px solid #e2e8f0;border-radius:16px;padding:13px 15px;outline:none}.input:focus{border-color:#7c3aed;box-shadow:0 0 0 4px rgba(124,58,237,.1)}.btn-primary{border-radius:16px;background:#08090d;color:white;padding:13px 20px;font-weight:800}.btn-primary:hover{background:#6d28d9}.btn-secondary{border-radius:16px;border:1px solid #e2e8f0;background:white;padding:13px 20px;font-weight:800}

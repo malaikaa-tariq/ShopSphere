@@ -1,5 +1,1 @@
-import { Link, useLocation } from "react-router-dom";
-export default function PaymentResult() {
-  const ok = useLocation().pathname.includes("success");
-  return <main className="mx-auto max-w-xl px-5 py-20 text-center"><h1 className="text-4xl font-black">{ok ? "Payment successful" : "Payment cancelled"}</h1><p className="mt-4 text-slate-600">{ok ? "Your order has been confirmed after Stripe payment." : "Your order was not paid."}</p><Link to="/" className="mt-6 inline-block rounded-xl bg-indigo-600 px-5 py-3 font-bold text-white">Back to shop</Link></main>;
-}
+import {Link,useLocation} from "react-router-dom";export default function PaymentResult(){const ok=useLocation().pathname.includes("success");return <main className="container-page grid min-h-[65vh] place-items-center"><div className="card max-w-lg p-10 text-center"><div className="text-6xl">{ok?"✓":"↺"}</div><h1 className="mt-5 font-display text-3xl font-bold">{ok?"Payment submitted":"Payment cancelled"}</h1><p className="mt-3 text-sm leading-6 text-slate-500">{ok?"Stripe has received checkout. The webhook will confirm the order on the server.":"No payment was captured."}</p><Link to={ok?"/orders":"/cart"} className="btn-primary mt-6 inline-block">{ok?"View orders":"Back to cart"}</Link></div></main>}
