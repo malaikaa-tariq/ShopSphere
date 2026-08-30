@@ -1,25 +1,45 @@
-import { Link } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import { addToCart } from "../features/cart/cartSlice";
+import React from 'react';
 
-export default function ProductCard({ product }) {
-  const dispatch = useDispatch();
+const ProductCard = ({ product, onAddToCart }) => {
   return (
-    <article className="overflow-hidden rounded-2xl border bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
-      <Link to={`/products/${product._id}`}>
-        <div className="aspect-[4/3] bg-slate-100">
-          {product.images?.[0] && <img src={product.images[0]} alt={product.name} className="h-full w-full object-cover" />}
+    <div className="bg-white rounded-none border border-slate-200 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col justify-between group">
+      <div>
+        <div className="relative overflow-hidden aspect-square bg-slate-100 rounded-none">
+          <img
+            src={product.image}
+            alt={product.name}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+          <span
+            className="absolute top-3 left-3 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 text-white rounded-none shadow-sm"
+            style={{ backgroundColor: '#889FD1' }}
+          >
+            {product.category}
+          </span>
         </div>
-      </Link>
-      <div className="p-4">
-        <p className="text-xs font-bold uppercase tracking-wider text-indigo-500">{product.category}</p>
-        <h3 className="mt-1 line-clamp-1 font-bold">{product.name}</h3>
-        <p className="mt-2 text-xl font-black">${product.price.toFixed(2)}</p>
-        <button
-          onClick={() => dispatch(addToCart({ product: product._id, name: product.name, price: product.price, image: product.images?.[0], quantity: 1 }))}
-          className="mt-3 w-full rounded-xl bg-indigo-600 px-4 py-2 font-bold text-white hover:bg-indigo-700"
-        >Add to cart</button>
+
+        <div className="p-4 space-y-2">
+          <h3 className="font-bold text-slate-900 text-base line-clamp-1">
+            {product.name}
+          </h3>
+          <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
+            {product.description}
+          </p>
+        </div>
       </div>
-    </article>
+
+      <div className="p-4 pt-0 flex items-center justify-between border-t border-slate-100 mt-2">
+        <span className="text-lg font-extrabold text-slate-900">${product.price}</span>
+        <button
+          onClick={() => onAddToCart(product)}
+          className="px-4 py-2 text-white text-xs font-bold rounded-none transition-all active:scale-95 shadow-sm hover:opacity-90"
+          style={{ backgroundColor: '#889FD1' }}
+        >
+          Add to Cart
+        </button>
+      </div>
+    </div>
   );
-}
+};
+
+export default ProductCard;
