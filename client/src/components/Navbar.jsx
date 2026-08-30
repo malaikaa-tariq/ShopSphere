@@ -79,5 +79,20 @@ const Navbar = ({ cartCount, onOpenCart }) => {
     </nav>
   );
 };
+// Function to get current user's unique cart key
+const getCartKey = () => {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  return user.id ? `cart_${user.id}` : 'cart_guest';
+};
 
+// Reading Cart
+const loadUserCart = () => {
+  const savedCart = localStorage.getItem(getCartKey());
+  return savedCart ? JSON.parse(savedCart) : [];
+};
+
+// Saving Cart Updates
+const saveUserCart = (cartItems) => {
+  localStorage.setItem(getCartKey(), JSON.stringify(cartItems));
+};
 export default Navbar;
