@@ -1,1 +1,21 @@
-{"name":"shopsphere-server","version":"2.0.0","private":true,"type":"module","scripts":{"dev":"node --watch src/server.js","start":"node src/server.js","seed:admin":"node src/seed/admin.js"},"dependencies":{"bcryptjs":"^3.0.2","cors":"^2.8.5","dotenv":"^17.2.1","express":"^5.1.0","jsonwebtoken":"^9.0.2","mongoose":"^8.18.0","morgan":"^1.10.0","stripe":"^18.5.0"}}
+{
+  "name": "shopsphere-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "seed:admin": "node src/seed/admin.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.18.0",
+    "morgan": "^1.10.0",
+    "stripe": "^18.5.0"
+  }
+}

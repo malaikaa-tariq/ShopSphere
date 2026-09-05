@@ -1,1 +1,18 @@
-import Logo from "./Logo";export default function Footer(){return <footer className="mt-20 bg-slate-950 py-12 text-slate-400"><div className="container-page flex flex-col gap-5 md:flex-row md:justify-between"><div><Logo dark/><p className="mt-3 text-sm">Independent commerce, elevated.</p></div><p className="text-xs">© {new Date().getFullYear()} ShopSphere</p></div></footer>}
+export default function Footer() {
+  return (
+    <footer className="footer">
+      <div className="container footer-inner">
+        <div>
+          <strong>ShopSphere</strong>
+          <p>
+            A premium multi-vendor marketplace built with MERN.
+          </p>
+        </div>
+
+        <div className="footer-copy">
+          © {new Date().getFullYear()} ShopSphere. All rights reserved.
+        </div>
+      </div>
+    </footer>
+  );
+}

@@ -1,1 +1,112 @@
-import {Link} from "react-router-dom";import {ShoppingBag,LogOut} from "lucide-react";import {useDispatch,useSelector} from "react-redux";import {logout} from "../features/auth/authSlice";import Logo from "./Logo";export default function Navbar(){const u=useSelector(s=>s.auth.user),c=useSelector(s=>s.cart.items.reduce((a,i)=>a+i.quantity,0)),d=useDispatch();return <header className="sticky top-0 z-50 border-b border-slate-200/70 bg-white/90 backdrop-blur-xl"><div className="container-page flex h-20 items-center justify-between"><Logo/><nav className="hidden gap-7 md:flex">{u?.role==="admin"?<Link to="/admin" className="font-bold">Admin</Link>:u?.role==="seller"?<Link to="/seller" className="font-bold">Seller Studio</Link>:<><Link to="/" className="font-bold">Discover</Link>{u&&<Link to="/orders" className="font-bold">My Orders</Link>}</>}</nav><div className="flex items-center gap-2"><Link to="/cart" className="relative rounded-full p-3 hover:bg-slate-100"><ShoppingBag size={20}/>{c>0&&<span className="absolute -right-1 -top-1 rounded-full bg-violet-600 px-1.5 text-[10px] font-black text-white">{c}</span>}</Link>{u?<button onClick={()=>d(logout())} className="rounded-full p-3 hover:bg-slate-100"><LogOut size={18}/></button>:<Link to="/login" className="btn-primary">Sign in</Link>}</div></div></header>}
+import {
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  ShoppingCart,
+  UserRound,
+  X,
+} from "lucide-react";
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { logout } from "../features/auth/authSlice";
+import { useState } from "react";
+import Logo from "./Logo";
+
+export default function Navbar() {
+  const [open, setOpen] = useState(false);
+
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const user = useSelector((state) => state.auth.user);
+  const cartCount = useSelector(
+    (state) =>
+      state.cart.items.reduce(
+        (total, item) => total + item.quantity,
+        0
+      )
+  );
+
+  const handleLogout = () => {
+    dispatch(logout());
+    setOpen(false);
+    navigate("/");
+  };
+
+  return (
+    <header className="navbar">
+      <div className="container nav-inner">
+        <Link to="/" onClick={() => setOpen(false)}>
+          <Logo />
+        </Link>
+
+        <button
+          className="mobile-menu"
+          onClick={() => setOpen(!open)}
+          aria-label="Toggle navigation"
+        >
+          {open ? <X /> : <Menu />}
+        </button>
+
+        <nav className={open ? "nav-links open" : "nav-links"}>
+          <NavLink to="/" onClick={() => setOpen(false)}>
+            Home
+          </NavLink>
+
+          <NavLink to="/products" onClick={() => setOpen(false)}>
+            Marketplace
+          </NavLink>
+
+          {user && (
+            <NavLink
+              to="/orders"
+              onClick={() => setOpen(false)}
+            >
+              Orders
+            </NavLink>
+          )}
+
+          {user && ["seller", "admin"].includes(user.role) && (
+            <NavLink
+              to="/dashboard"
+              onClick={() => setOpen(false)}
+            >
+              Dashboard
+            </NavLink>
+          )}
+
+          <Link
+            className="cart-link"
+            to="/cart"
+            onClick={() => setOpen(false)}
+          >
+            <ShoppingCart size={18} />
+            Cart
+            {cartCount > 0 && (
+              <span className="cart-badge">{cartCount}</span>
+            )}
+          </Link>
+
+          {user ? (
+            <button
+              className="nav-user"
+              onClick={handleLogout}
+            >
+              <UserRound size={17} />
+              {user.name}
+              <LogOut size={15} />
+            </button>
+          ) : (
+            <Link
+              className="button button-small"
+              to="/auth?mode=login"
+              onClick={() => setOpen(false)}
+            >
+              Sign in
+            </Link>
+          )}
+        </nav>
+      </div>
+    </header>
+  );
+}

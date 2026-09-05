@@ -1,9 +1,19 @@
 import jwt from "jsonwebtoken";
 
 export function signToken(user) {
+  if (!process.env.JWT_SECRET) {
+    throw new Error("JWT_SECRET is missing.");
+  }
+
   return jwt.sign(
-    { id: user._id.toString(), role: user.role, email: user.email },
+    {
+      id: user._id.toString(),
+      role: user.role,
+    },
     process.env.JWT_SECRET,
-    { expiresIn: "7d" }
+    {
+      expiresIn:
+        process.env.JWT_EXPIRES_IN || "7d",
+    }
   );
 }

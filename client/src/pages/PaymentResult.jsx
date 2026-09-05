@@ -1,1 +1,34 @@
-import {Link,useLocation} from "react-router-dom";export default function PaymentResult(){const ok=useLocation().pathname.includes("success");return <main className="container-page grid min-h-[65vh] place-items-center"><div className="card max-w-lg p-10 text-center"><div className="text-6xl">{ok?"✓":"↺"}</div><h1 className="mt-5 font-display text-3xl font-bold">{ok?"Payment submitted":"Payment cancelled"}</h1><p className="mt-3 text-sm leading-6 text-slate-500">{ok?"Stripe has received checkout. The webhook will confirm the order on the server.":"No payment was captured."}</p><Link to={ok?"/orders":"/cart"} className="btn-primary mt-6 inline-block">{ok?"View orders":"Back to cart"}</Link></div></main>}
+import { Link, useSearchParams } from "react-router-dom";
+
+export default function PaymentResult() {
+  const [params] = useSearchParams();
+
+  const cancelled =
+    params.get("cancelled") === "true";
+
+  return (
+    <div className="form-page">
+      <div className="form-card">
+        <span className="eyebrow">
+          Payment
+        </span>
+
+        <h1>
+          {cancelled
+            ? "Payment cancelled"
+            : "Payment processing"}
+        </h1>
+
+        <p>
+          {cancelled
+            ? "Your order remains unpaid. You can return to your cart and try again."
+            : "Stripe has returned you to ShopSphere. Your signed webhook will confirm the order payment."}
+        </p>
+
+        <Link className="button" to="/orders">
+          View orders
+        </Link>
+      </div>
+    </div>
+  );
+}

@@ -1,1 +1,86 @@
-import {useEffect,useState} from "react";import {Link} from "react-router-dom";import {api} from "../services/api";export default function Orders(){const[o,setO]=useState([]);useEffect(()=>{api.get("/orders/mine").then(r=>setO(r.data))},[]);return <main className="container-page py-12"><h1 className="font-display text-4xl font-bold">My orders</h1><div className="mt-8 space-y-4">{o.map(x=><div className="card p-5" key={x._id}><div className="flex justify-between"><b>#{x._id.slice(-8).toUpperCase()}</b><b>${x.total.toFixed(2)}</b></div><p className="mt-2 text-sm text-slate-500">Payment: {x.paymentStatus} · Status: {x.orderStatus}</p><div className="mt-4 h-2 rounded-full bg-slate-100"><div className="h-2 rounded-full bg-violet-600" style={{width:`${({processing:25,confirmed:50,shipped:75,delivered:100,cancelled:100}[x.orderStatus]||10)}%`}}/></div><Link className="mt-4 inline-block text-sm font-bold text-violet-600" to={`/orders/${x._id}`}>View details →</Link></div>)}</div></main>}
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import api from "../services/api";
+
+export default function Orders() {
+  const [orders, setOrders] = useState([]);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    api
+      .get("/orders/mine")
+      .then(({ data }) =>
+        setOrders(data.orders || data || [])
+      )
+      .catch((err) =>
+        setError(
+          err.response?.data?.message ||
+            "Unable to load orders."
+        )
+      );
+  }, []);
+
+  return (
+    <div className="page">
+      <div className="container">
+        <span className="eyebrow">
+          Buyer account
+        </span>
+
+        <h1 className="page-title">
+          My orders
+        </h1>
+
+        {error && (
+          <div className="error-message">
+            {error}
+          </div>
+        )}
+
+        <div className="order-list">
+          {orders.map((order) => (
+            <Link
+              to={`/orders/${order._id}`}
+              className="order-card"
+              key={order._id}
+            >
+              <div>
+                <span>Order</span>
+                <strong>
+                  #{order._id.slice(-8).toUpperCase()}
+                </strong>
+              </div>
+
+              <div>
+                <span>Payment</span>
+                <strong>
+                  {order.paymentStatus}
+                </strong>
+              </div>
+
+              <div>
+                <span>Status</span>
+                <strong>
+                  {order.orderStatus}
+                </strong>
+              </div>
+
+              <div>
+                <span>Total</span>
+                <strong>
+                  ${Number(order.total).toFixed(2)}
+                </strong>
+              </div>
+            </Link>
+          ))}
+
+          {!orders.length && !error && (
+            <div className="empty">
+              You have no orders yet.
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

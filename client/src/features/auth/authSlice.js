@@ -1,23 +1,44 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-const saved = localStorage.getItem("user");
-const initialState = { user: saved ? JSON.parse(saved) : null, token: localStorage.getItem("token") };
+const storedUser = localStorage.getItem("shopsphere_user");
+const storedToken = localStorage.getItem("shopsphere_token");
 
-const slice = createSlice({
+const initialState = {
+  user: storedUser ? JSON.parse(storedUser) : null,
+  token: storedToken || null,
+};
+
+const authSlice = createSlice({
   name: "auth",
+
   initialState,
+
   reducers: {
-    setSession(state, action) {
+    setCredentials: (state, action) => {
       state.user = action.payload.user;
       state.token = action.payload.token;
-      localStorage.setItem("user", JSON.stringify(action.payload.user));
-      localStorage.setItem("token", action.payload.token);
+
+      localStorage.setItem(
+        "shopsphere_user",
+        JSON.stringify(action.payload.user)
+      );
+
+      localStorage.setItem(
+        "shopsphere_token",
+        action.payload.token
+      );
     },
-    logout(state) {
-      state.user = null; state.token = null;
-      localStorage.removeItem("user"); localStorage.removeItem("token");
-    }
-  }
+
+    logout: (state) => {
+      state.user = null;
+      state.token = null;
+
+      localStorage.removeItem("shopsphere_user");
+      localStorage.removeItem("shopsphere_token");
+    },
+  },
 });
-export const { setSession, logout } = slice.actions;
-export default slice.reducer;
+
+export const { setCredentials, logout } = authSlice.actions;
+
+export default authSlice.reducer;

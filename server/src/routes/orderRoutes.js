@@ -1,1 +1,61 @@
-import {Router} from "express";import {authorize,protect} from "../middleware/auth.js";import {createOrder,getMyOrder,myOrders,sellerOrders,updateOrderStatus} from "../controllers/orderController.js";const r=Router();r.post("/",protect,authorize("buyer"),createOrder);r.get("/mine",protect,authorize("buyer"),myOrders);r.get("/seller",protect,authorize("seller","admin"),sellerOrders);r.get("/:id",protect,authorize("buyer"),getMyOrder);r.patch("/:id/status",protect,authorize("seller","admin"),updateOrderStatus);export default r;
+import { Router } from "express";
+
+import {
+  allOrders,
+  createOrder,
+  getMyOrder,
+  myOrders,
+  sellerOrders,
+  updateOrderStatus,
+} from "../controllers/orderController.js";
+
+import {
+  authorize,
+  protect,
+} from "../middleware/auth.js";
+
+const router = Router();
+
+router.post(
+  "/",
+  protect,
+  authorize("buyer"),
+  createOrder
+);
+
+router.get(
+  "/mine",
+  protect,
+  authorize("buyer"),
+  myOrders
+);
+
+router.get(
+  "/seller",
+  protect,
+  authorize("seller"),
+  sellerOrders
+);
+
+router.get(
+  "/admin",
+  protect,
+  authorize("admin"),
+  allOrders
+);
+
+router.get(
+  "/:id",
+  protect,
+  authorize("buyer"),
+  getMyOrder
+);
+
+router.patch(
+  "/:id/status",
+  protect,
+  authorize("seller", "admin"),
+  updateOrderStatus
+);
+
+export default router;

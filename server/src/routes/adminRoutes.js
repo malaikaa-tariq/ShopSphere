@@ -1,6 +1,23 @@
 import { Router } from "express";
-import { overview } from "../controllers/adminController.js";
-import { authorize, protect } from "../middleware/auth.js";
+
+import {
+  listUsers,
+  overview,
+} from "../controllers/adminController.js";
+
+import {
+  authorize,
+  protect,
+} from "../middleware/auth.js";
+
 const router = Router();
-router.get("/overview", protect, authorize("admin"), overview);
+
+router.use(
+  protect,
+  authorize("admin")
+);
+
+router.get("/overview", overview);
+router.get("/users", listUsers);
+
 export default router;

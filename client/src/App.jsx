@@ -1,1 +1,58 @@
-import {BrowserRouter,Routes,Route,Navigate} from "react-router-dom";import {useSelector} from "react-redux";import Navbar from "./components/Navbar";import Footer from "./components/Footer";import Home from "./pages/Home";import Auth from "./pages/Auth";import Cart from "./pages/Cart";import Checkout from "./pages/Checkout";import Orders from "./pages/Orders";import OrderDetails from "./pages/OrderDetails";import ProductDetails from "./pages/ProductDetails";import Dashboard from "./pages/Dashboard";import PaymentResult from "./pages/PaymentResult";function Guard({roles,children}){const u=useSelector(s=>s.auth.user);if(!u)return <Navigate to="/login" replace/>;if(roles&&!roles.includes(u.role))return <Navigate to="/" replace/>;return children}export default function App(){return <BrowserRouter><Navbar/><Routes><Route path="/" element={<Home/>}/><Route path="/login" element={<Auth mode="login"/>}/><Route path="/register" element={<Auth mode="register"/>}/><Route path="/cart" element={<Cart/>}/><Route path="/checkout" element={<Guard roles={["buyer"]}><Checkout/></Guard>}/><Route path="/orders" element={<Guard roles={["buyer"]}><Orders/></Guard>}/><Route path="/orders/:id" element={<Guard roles={["buyer"]}><OrderDetails/></Guard>}/><Route path="/products/:id" element={<ProductDetails/>}/><Route path="/seller" element={<Guard roles={["seller","admin"]}><Dashboard type="seller"/></Guard>}/><Route path="/admin" element={<Guard roles={["admin"]}><Dashboard type="admin"/></Guard>}/><Route path="/payment/success" element={<PaymentResult/>}/><Route path="/payment/cancel" element={<PaymentResult/>}/><Route path="*" element={<Navigate to="/" replace/>}/></Routes><Footer/></BrowserRouter>}
+import { Routes, Route } from "react-router-dom";
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
+import ProtectedRoute from "./components/ProtectedRoute";
+
+import Home from "./pages/Home";
+import Auth from "./pages/Auth";
+import Cart from "./pages/Cart";
+import Checkout from "./pages/Checkout";
+import Dashboard from "./pages/Dashboard";
+import Orders from "./pages/Orders";
+import OrderDetails from "./pages/OrderDetails";
+import ProductDetails from "./pages/ProductDetails";
+import PaymentResult from "./pages/PaymentResult";
+
+export default function App() {
+  return (
+    <div className="app-shell">
+      <Navbar />
+
+      <main>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/products" element={<Home />} />
+          <Route
+            path="/products/:id"
+            element={<ProductDetails />}
+          />
+          <Route path="/cart" element={<Cart />} />
+
+          <Route element={<ProtectedRoute roles={["buyer"]} />}>
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/orders" element={<Orders />} />
+            <Route
+              path="/orders/:id"
+              element={<OrderDetails />}
+            />
+            <Route
+              path="/payment-result"
+              element={<PaymentResult />}
+            />
+          </Route>
+
+          <Route
+            element={
+              <ProtectedRoute roles={["seller", "admin"]} />
+            }
+          >
+            <Route path="/dashboard" element={<Dashboard />} />
+          </Route>
+        </Routes>
+      </main>
+
+      <Footer />
+    </div>
+  );
+}

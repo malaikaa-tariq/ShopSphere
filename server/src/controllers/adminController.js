@@ -2,16 +2,65 @@ import User from "../models/User.js";
 import Product from "../models/Product.js";
 import Order from "../models/Order.js";
 
-export async function overview(req, res) {
-  const [users, sellers, products, orders] = await Promise.all([
+export async function overview(
+  _req,
+  res
+) {
+  const [
+    users,
+    sellers,
+    products,
+    orders,
+    paidOrders,
+    recentOrders,
+  ] = await Promise.all([
     User.countDocuments(),
-    User.countDocuments({ role: "seller" }),
+
+    User.countDocuments({
+      role: "seller",
+    }),
+
     Product.countDocuments(),
-    Order.countDocuments()
+
+    Order.countDocuments(),
+
+    Order.find({
+      paymentStatus: "paid",
+    }).select("total"),
+
+    Order.find()
+      .populate("buyer", "name email")
+      .sort({ createdAt: -1 })
+      .limit(10),
   ]);
-  const revenue = await Order.aggregate([
-    { $match: { paymentStatus: "paid" } },
-    { $group: { _id: null, total: { $sum: "$total" } } }
-  ]);
-  res.json({ users, sellers, products, orders, revenue: revenue[0]?.total || 0 });
+
+  const revenue =
+    paidOrders.reduce(
+      (sum, order) =>
+        sum + Number(order.total),
+      0
+    );
+
+  return res.json({
+    stats: {
+      users,
+      sellers,
+      products,
+      orders,
+      revenue,
+    },
+
+    recentOrders,
+  });
+}
+
+export async function listUsers(
+  _req,
+  res
+) {
+  const users = await User.find()
+    .select("-password")
+    .sort({ createdAt: -1 });
+
+  return res.json({ users });
 }

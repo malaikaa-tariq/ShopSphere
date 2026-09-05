@@ -1,1 +1,218 @@
-import {useEffect,useState} from "react";import {useSelector} from "react-redux";import {api} from "../services/api";export default function Dashboard({type}){const u=useSelector(s=>s.auth.user);const admin=type==="admin";const[data,setData]=useState(null),[products,setProducts]=useState([]),[form,setForm]=useState({name:"",description:"",category:"Electronics",price:"",stock:"",images:"",status:"active"}),[edit,setEdit]=useState(null);async function load(){if(admin){const[a,p]=await Promise.all([api.get("/admin/overview"),api.get("/products?includeArchived=true")]);setData(a.data);setProducts(p.data)}else{const[o,p]=await Promise.all([api.get("/orders/seller"),api.get(`/products?seller=${u.id}&includeArchived=true`)]);setData(o.data);setProducts(p.data)}}useEffect(()=>{load()},[]);async function save(e){e.preventDefault();const x={...form,price:Number(form.price),stock:Number(form.stock),images:form.images.split(",").map(s=>s.trim()).filter(Boolean)};if(edit)await api.put(`/products/${edit}`,x);else await api.post("/products",x);setEdit(null);setForm({name:"",description:"",category:"Electronics",price:"",stock:"",images:"",status:"active"});load()}if(!u)return null;const orders=admin?data?.recentOrders||[]:data||[];const revenue=orders.filter(o=>o.paymentStatus==="paid").reduce((a,o)=>a+o.total,0);return <main className="container-page py-12"><p className="text-xs font-black uppercase tracking-widest text-violet-600">{admin?"Control center":"Seller studio"}</p><h1 className="mt-2 font-display text-4xl font-bold">{admin?"Admin Dashboard":"Seller Dashboard"}</h1><div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">{(admin?[["Users",data?.users],["Sellers",data?.sellers],["Products",data?.products],["Orders",data?.orders],["Revenue",`$${Number(data?.revenue||0).toFixed(2)}`]]:[["Products",products.length],["Orders",orders.length],["Revenue",`$${revenue.toFixed(2)}`]]).map(x=><div className="card p-5" key={x[0]}><p className="text-xs font-bold text-slate-500">{x[0]}</p><p className="mt-2 text-2xl font-black">{x[1]??0}</p></div>)}</div>{!admin&&<section className="mt-8 grid gap-6 lg:grid-cols-[1fr_360px]"><div className="card overflow-hidden"><h2 className="border-b p-5 font-display text-xl font-bold">My products</h2>{products.map(p=><div className="flex items-center gap-3 border-b p-4" key={p._id}><div className="h-12 w-12 rounded-xl bg-slate-100 overflow-hidden">{p.images?.[0]&&<img src={p.images[0]} className="h-full w-full object-cover"/>}</div><div className="flex-1"><b>{p.name}</b><p className="text-xs text-slate-500">${p.price} · {p.stock} stock</p></div><button className="text-xs font-bold text-violet-600" onClick={()=>{setEdit(p._id);setForm({...p,images:(p.images||[]).join(",")})}}>Edit</button></div>)}</div><form onSubmit={save} className="card p-5"><h2 className="font-display text-xl font-bold">{edit?"Edit product":"Add product"}</h2>{["name","category","price","stock","images"].map(k=><input key={k} className="input mt-3" required={k!=="images"} placeholder={k} value={form[k]||""} onChange={e=>setForm({...form,[k]:e.target.value})}/>)}<textarea required className="input mt-3 min-h-28" placeholder="description" value={form.description} onChange={e=>setForm({...form,description:e.target.value})}/><button className="btn-primary mt-4 w-full">{edit?"Update":"Publish"}</button></form></section>}<section className="card mt-8 overflow-hidden"><h2 className="border-b p-5 font-display text-xl font-bold">{admin?"Recent orders":"Seller orders"}</h2>{orders.map(o=><div className="grid gap-2 border-b p-5 md:grid-cols-4" key={o._id}><b>#{o._id.slice(-8).toUpperCase()}</b><span>{o.buyer?.name||"Buyer"}</span><b>${o.total.toFixed(2)}</b><span className="capitalize">{o.paymentStatus} · {o.orderStatus}</span></div>)}</section></main>}
+import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
+import api from "../services/api";
+
+export default function Dashboard() {
+  const user = useSelector((state) => state.auth.user);
+
+  const [data, setData] = useState(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const endpoint =
+          user.role === "admin"
+            ? "/admin/overview"
+            : "/orders/seller";
+
+        const { data } = await api.get(endpoint);
+        setData(data);
+      } catch (err) {
+        setError(
+          err.response?.data?.message ||
+            "Unable to load dashboard."
+        );
+      }
+    };
+
+    load();
+  }, [user.role]);
+
+  if (error) {
+    return (
+      <div className="page container">
+        <div className="error-message">
+          {error}
+        </div>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="page container">
+        Loading dashboard...
+      </div>
+    );
+  }
+
+  if (user.role === "admin") {
+    return (
+      <div className="page">
+        <div className="container">
+          <span className="eyebrow">
+            Administration
+          </span>
+
+          <h1 className="page-title">
+            Admin control center
+          </h1>
+
+          <div className="dashboard-grid">
+            <div className="stat-card">
+              <span>Users</span>
+              <strong>{data.stats.users}</strong>
+            </div>
+
+            <div className="stat-card">
+              <span>Sellers</span>
+              <strong>{data.stats.sellers}</strong>
+            </div>
+
+            <div className="stat-card">
+              <span>Products</span>
+              <strong>{data.stats.products}</strong>
+            </div>
+
+            <div className="stat-card">
+              <span>Orders</span>
+              <strong>{data.stats.orders}</strong>
+            </div>
+          </div>
+
+          <div className="stat-card">
+            <span>Paid revenue</span>
+            <strong>
+              ${Number(data.stats.revenue).toFixed(2)}
+            </strong>
+          </div>
+
+          <h2 style={{ marginTop: 40 }}>
+            Recent orders
+          </h2>
+
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Order</th>
+                  <th>Buyer</th>
+                  <th>Total</th>
+                  <th>Payment</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {data.recentOrders.map((order) => (
+                  <tr key={order._id}>
+                    <td>
+                      #{order._id.slice(-8)}
+                    </td>
+
+                    <td>
+                      {order.buyer?.name ||
+                        "Unknown"}
+                    </td>
+
+                    <td>
+                      ${Number(order.total).toFixed(2)}
+                    </td>
+
+                    <td>
+                      {order.paymentStatus}
+                    </td>
+
+                    <td>
+                      {order.orderStatus}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const orders = data.orders || [];
+
+  return (
+    <div className="page">
+      <div className="container">
+        <span className="eyebrow">
+          Seller workspace
+        </span>
+
+        <h1 className="page-title">
+          Seller dashboard
+        </h1>
+
+        <div className="dashboard-grid">
+          <div className="stat-card">
+            <span>Orders</span>
+            <strong>{orders.length}</strong>
+          </div>
+
+          <div className="stat-card">
+            <span>Revenue</span>
+            <strong>
+              $
+              {orders
+                .filter(
+                  (order) =>
+                    order.paymentStatus === "paid"
+                )
+                .reduce(
+                  (sum, order) =>
+                    sum + Number(order.total),
+                  0
+                )
+                .toFixed(2)}
+            </strong>
+          </div>
+        </div>
+
+        <h2>Seller orders</h2>
+
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Order</th>
+                <th>Buyer</th>
+                <th>Total</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {orders.map((order) => (
+                <tr key={order._id}>
+                  <td>
+                    #{order._id.slice(-8)}
+                  </td>
+
+                  <td>
+                    {order.buyer?.name ||
+                      "Buyer"}
+                  </td>
+
+                  <td>
+                    ${Number(order.total).toFixed(2)}
+                  </td>
+
+                  <td>
+                    {order.orderStatus}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}

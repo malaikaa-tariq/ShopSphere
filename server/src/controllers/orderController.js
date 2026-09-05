@@ -1,78 +1,72 @@
-import Product from "../models/Product.js";
 import Order from "../models/Order.js";
-
-const statuses = [
-  "processing",
-  "confirmed",
-  "shipped",
-  "delivered",
-  "cancelled",
-];
-
-const allowedTransitions = {
-  processing: ["confirmed", "cancelled"],
-  confirmed: ["shipped", "cancelled"],
-  shipped: ["delivered"],
-  delivered: [],
-  cancelled: [],
-};
+import Product from "../models/Product.js";
 
 export async function createOrder(req, res) {
   try {
-    const { items, shippingAddress } = req.body;
-
-    if (!items?.length) {
-      return res.status(400).json({
-        message: "Your cart is empty.",
-      });
-    }
-
-    const requiredAddressFields = [
-      "fullName",
-      "address",
-      "city",
-      "country",
-      "postalCode",
-    ];
+    const {
+      items,
+      shippingAddress,
+    } = req.body;
 
     if (
-      !shippingAddress ||
-      requiredAddressFields.some(
-        (field) => !String(shippingAddress[field] || "").trim()
-      )
+      !Array.isArray(items) ||
+      !items.length
     ) {
       return res.status(400).json({
-        message: "Complete your shipping address.",
+        message: "Cart cannot be empty.",
       });
     }
 
+    const products = await Product.find({
+      _id: {
+        $in: items.map(
+          (item) => item.product
+        ),
+      },
+      status: "active",
+    });
+
+    const productMap = new Map(
+      products.map((product) => [
+        product._id.toString(),
+        product,
+      ])
+    );
+
+    const orderItems = [];
     let total = 0;
-    const normalizedItems = [];
 
     for (const item of items) {
+      const product = productMap.get(
+        String(item.product)
+      );
+
+      if (!product) {
+        return res.status(400).json({
+          message:
+            "One or more products are unavailable.",
+        });
+      }
+
       const quantity = Number(item.quantity);
 
-      if (!Number.isInteger(quantity) || quantity < 1) {
+      if (
+        !Number.isInteger(quantity) ||
+        quantity < 1
+      ) {
         return res.status(400).json({
           message: "Invalid quantity.",
         });
       }
 
-      const product = await Product.findById(item.product);
-
-      if (!product || product.status !== "active") {
-        return res.status(400).json({
-          message: "A product is unavailable.",
-        });
-      }
-
       if (product.stock < quantity) {
         return res.status(400).json({
-          message: `Only ${product.stock} left for ${product.name}.`,
+          message:
+            `${product.name} does not have enough stock.`,
         });
       }
 
-      normalizedItems.push({
+      orderItems.push({
         product: product._id,
         seller: product.seller,
         name: product.name,
@@ -86,154 +80,119 @@ export async function createOrder(req, res) {
 
     const order = await Order.create({
       buyer: req.user._id,
-      items: normalizedItems,
+      items: orderItems,
       shippingAddress,
-      total: Number(total.toFixed(2)),
-      paymentStatus: "pending",
-      orderStatus: "processing",
+      total,
     });
 
-    return res.status(201).json(order);
+    return res.status(201).json({
+      order,
+    });
   } catch (error) {
-    console.error("createOrder:", error);
+    console.error(error);
 
     return res.status(500).json({
-      message: "Failed to create order.",
+      message: "Unable to create order.",
     });
   }
 }
 
 export async function myOrders(req, res) {
-  try {
-    const orders = await Order.find({
-      buyer: req.user._id,
-    }).sort({
-      createdAt: -1,
-    });
+  const orders = await Order.find({
+    buyer: req.user._id,
+  }).sort({ createdAt: -1 });
 
-    return res.json(orders);
-  } catch (error) {
-    console.error("myOrders:", error);
-
-    return res.status(500).json({
-      message: "Failed to fetch orders.",
-    });
-  }
+  return res.json({ orders });
 }
 
 export async function getMyOrder(req, res) {
-  try {
-    const order = await Order.findOne({
-      _id: req.params.id,
-      buyer: req.user._id,
-    });
+  const order = await Order.findOne({
+    _id: req.params.id,
+    buyer: req.user._id,
+  });
 
-    if (!order) {
-      return res.status(404).json({
-        message: "Order not found.",
-      });
-    }
-
-    return res.json(order);
-  } catch (error) {
-    console.error("getMyOrder:", error);
-
-    return res.status(500).json({
-      message: "Failed to fetch order.",
+  if (!order) {
+    return res.status(404).json({
+      message: "Order not found.",
     });
   }
+
+  return res.json({ order });
 }
 
 export async function sellerOrders(req, res) {
-  try {
-    const orders = await Order.find({
-      "items.seller": req.user._id,
-    })
-      .populate("buyer", "name email")
-      .sort({
-        createdAt: -1,
-      });
+  const orders = await Order.find({
+    "items.seller": req.user._id,
+  })
+    .populate("buyer", "name email")
+    .sort({ createdAt: -1 });
 
-    return res.json(orders);
-  } catch (error) {
-    console.error("sellerOrders:", error);
-
-    return res.status(500).json({
-      message: "Failed to fetch seller orders.",
-    });
-  }
+  return res.json({ orders });
 }
 
-export async function updateOrderStatus(req, res) {
-  try {
-    const { status } = req.body;
+export async function allOrders(req, res) {
+  const orders = await Order.find()
+    .populate("buyer", "name email")
+    .sort({ createdAt: -1 });
 
-    if (!statuses.includes(status)) {
-      return res.status(400).json({
-        message: "Invalid status.",
-      });
-    }
+  return res.json({ orders });
+}
 
-    const order = await Order.findById(req.params.id);
+export async function updateOrderStatus(
+  req,
+  res
+) {
+  const { status } = req.body;
 
-    if (!order) {
-      return res.status(404).json({
-        message: "Order not found.",
-      });
-    }
+  const allowed = [
+    "processing",
+    "confirmed",
+    "shipped",
+    "delivered",
+    "cancelled",
+  ];
 
-    const isAdmin = req.user.role === "admin";
-
-    const isSeller =
-      req.user.role === "seller" &&
-      order.items.some((item) =>
-        item.seller.equals(req.user._id)
-      );
-
-    if (!isAdmin && !isSeller) {
-      return res.status(403).json({
-        message: "Forbidden.",
-      });
-    }
-
-    if (
-      order.paymentStatus !== "paid" &&
-      status !== "cancelled"
-    ) {
-      return res.status(400).json({
-        message: "Only paid orders can be fulfilled.",
-      });
-    }
-
-    const currentStatus = order.orderStatus || "processing";
-
-    if (
-      currentStatus !== status &&
-      !allowedTransitions[currentStatus]?.includes(status)
-    ) {
-      return res.status(400).json({
-        message: `Cannot move order from ${currentStatus} to ${status}.`,
-      });
-    }
-
-    order.orderStatus = status;
-
-    if (status === "delivered") {
-      order.deliveredAt = new Date();
-    }
-
-    if (status === "cancelled") {
-      order.cancelledAt = new Date();
-    }
-
-    await order.save();
-
-    return res.json(order);
-  } catch (error) {
-    console.error("updateOrderStatus:", error);
-
-    return res.status(500).json({
-      message: "Failed to update order status.",
+  if (!allowed.includes(status)) {
+    return res.status(400).json({
+      message: "Invalid order status.",
     });
   }
+
+  const order = await Order.findById(
+    req.params.id
+  );
+
+  if (!order) {
+    return res.status(404).json({
+      message: "Order not found.",
+    });
+  }
+
+  if (req.user.role === "seller") {
+    const ownsItem = order.items.some(
+      (item) =>
+        item.seller.equals(req.user._id)
+    );
+
+    if (!ownsItem) {
+      return res.status(403).json({
+        message:
+          "This order does not belong to your products.",
+      });
+    }
+  }
+
+  order.orderStatus = status;
+
+  if (status === "delivered") {
+    order.deliveredAt = new Date();
+  }
+
+  if (status === "cancelled") {
+    order.cancelledAt = new Date();
+  }
+
+  await order.save();
+
+  return res.json({ order });
 }

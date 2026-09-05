@@ -1,11 +1,51 @@
 import { Router } from "express";
-import { addReview, createProduct, deleteProduct, getProduct, listProducts, updateProduct } from "../controllers/productController.js";
-import { authorize, protect } from "../middleware/auth.js";
+
+import {
+  addReview,
+  createProduct,
+  deleteProduct,
+  getProduct,
+  listProducts,
+  updateProduct,
+} from "../controllers/productController.js";
+
+import {
+  authorize,
+  protect,
+} from "../middleware/auth.js";
+
 const router = Router();
+
 router.get("/", listProducts);
+
 router.get("/:id", getProduct);
-router.post("/", protect, authorize("seller", "admin"), createProduct);
-router.put("/:id", protect, authorize("seller", "admin"), updateProduct);
-router.delete("/:id", protect, authorize("seller", "admin"), deleteProduct);
-router.post("/:id/reviews", protect, authorize("buyer"), addReview);
+
+router.post(
+  "/",
+  protect,
+  authorize("seller", "admin"),
+  createProduct
+);
+
+router.put(
+  "/:id",
+  protect,
+  authorize("seller", "admin"),
+  updateProduct
+);
+
+router.delete(
+  "/:id",
+  protect,
+  authorize("seller", "admin"),
+  deleteProduct
+);
+
+router.post(
+  "/:id/reviews",
+  protect,
+  authorize("buyer"),
+  addReview
+);
+
 export default router;

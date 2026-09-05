@@ -1,1 +1,17 @@
-import {Link} from "react-router-dom";export default function Logo({dark=false}){return <Link to="/" className="group flex items-center gap-2.5"><span className="grid h-10 w-10 place-items-center rounded-2xl bg-slate-950 shadow-lg shadow-violet-500/20"><svg viewBox="0 0 32 32" className="h-7 w-7 text-white" fill="none"><path d="M7 11.5h18l-1.5 13H8.5L7 11.5Z" stroke="currentColor" strokeWidth="2.2"/><path d="M11 12V9.5a5 5 0 0 1 10 0V12" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"/><path d="m11.5 17 3.2 3.2 6-6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg></span><span className={`font-display text-xl font-bold ${dark?"text-white":"text-slate-950"}`}>Shop<span className="text-violet-600">Sphere</span></span></Link>}
+import { CircleDot } from "lucide-react";
+
+export default function Logo({ compact = false }) {
+  return (
+    <div className="brand">
+      <div className="brand-mark">
+        <CircleDot size={22} strokeWidth={2.5} />
+      </div>
+
+      {!compact && (
+        <span className="brand-word">
+          Shop<span>Sphere</span>
+        </span>
+      )}
+    </div>
+  );
+}

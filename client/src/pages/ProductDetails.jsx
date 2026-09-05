@@ -1,15 +1,132 @@
 import { useEffect, useState } from "react";
+import { Star, ShoppingBag } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { api } from "../services/api";
+import api from "../services/api";
 import { addToCart } from "../features/cart/cartSlice";
 
 export default function ProductDetails() {
-  const { id } = useParams(); const [p, setP] = useState(null); const dispatch = useDispatch();
-  useEffect(() => { api.get(`/products/${id}`).then(r => setP(r.data)); }, [id]);
-  if (!p) return <main className="p-10">Loading...</main>;
-  return <main className="mx-auto grid max-w-6xl gap-8 px-5 py-10 md:grid-cols-2">
-    <div className="aspect-square overflow-hidden rounded-3xl bg-slate-100">{p.images?.[0] && <img src={p.images[0]} className="h-full w-full object-cover" />}</div>
-    <div className="py-5"><p className="font-bold text-indigo-600">{p.category}</p><h1 className="mt-2 text-4xl font-black">{p.name}</h1><p className="mt-5 text-3xl font-black">${p.price.toFixed(2)}</p><p className="mt-5 leading-7 text-slate-600">{p.description}</p><button onClick={() => dispatch(addToCart({ product:p._id,name:p.name,price:p.price,image:p.images?.[0],quantity:1 }))} className="mt-7 rounded-xl bg-indigo-600 px-6 py-3 font-bold text-white">Add to cart</button></div>
-  </main>;
+  const { id } = useParams();
+  const dispatch = useDispatch();
+
+  const [product, setProduct] = useState(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    api
+      .get(`/products/${id}`)
+      .then(({ data }) => {
+        setProduct(data.product || data);
+      })
+      .catch((err) => {
+        setError(
+          err.response?.data?.message ||
+            "Product not found."
+        );
+      });
+  }, [id]);
+
+  if (error) {
+    return (
+      <div className="page container">
+        <div className="error-message">
+          {error}
+        </div>
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="page container">
+        Loading product...
+      </div>
+    );
+  }
+
+  const image =
+    product.images?.[0] ||
+    "https://images.unsplash.com/photo-1523275335684-37898b6baf30";
+
+  return (
+    <div className="page">
+      <div className="container product-detail">
+        <div className="detail-image">
+          <img src={image} alt={product.name} />
+        </div>
+
+        <div className="detail-content">
+          <span className="eyebrow">
+            {product.category}
+          </span>
+
+          <h1 className="page-title">
+            {product.name}
+          </h1>
+
+          <div className="rating">
+            <Star size={16} fill="currentColor" />
+            {Number(product.rating || 0).toFixed(1)}
+            <small>
+              ({product.numReviews || 0} reviews)
+            </small>
+          </div>
+
+          <h2 className="detail-price">
+            ${Number(product.price).toFixed(2)}
+          </h2>
+
+          <p>{product.description}</p>
+
+          <p className="stock">
+            {product.stock > 0
+              ? `${product.stock} available`
+              : "Out of stock"}
+          </p>
+
+          <button
+            className="button"
+            disabled={!product.stock}
+            onClick={() =>
+              dispatch(
+                addToCart({
+                  product: product._id,
+                  name: product.name,
+                  price: product.price,
+                  image,
+                  stock: product.stock,
+                })
+              )
+            }
+          >
+            <ShoppingBag size={18} />
+            Add to cart
+          </button>
+
+          <div className="review-list">
+            <h2>Customer reviews</h2>
+
+            {product.reviews?.length ? (
+              product.reviews.map((review) => (
+                <div
+                  className="review"
+                  key={review._id}
+                >
+                  <strong>{review.name}</strong>
+
+                  <div className="rating">
+                    {"★".repeat(review.rating)}
+                  </div>
+
+                  <p>{review.comment}</p>
+                </div>
+              ))
+            ) : (
+              <p>No reviews yet.</p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }

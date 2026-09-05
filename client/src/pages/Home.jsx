@@ -1,1 +1,158 @@
-import {useEffect,useState} from "react";import ProductCard from "../components/ProductCard";import {api} from "../services/api";export default function Home(){const[p,setP]=useState([]),[q,setQ]=useState("");const load=async()=>setP((await api.get("/products",{params:q?{q}:{}})).data);useEffect(()=>{load()},[]);return <><section className="bg-slate-950 text-white"><div className="container-page grid min-h-[560px] items-center py-20 lg:grid-cols-2"><div><p className="text-xs font-black uppercase tracking-[.25em] text-violet-300">Independent commerce, elevated</p><h1 className="mt-5 font-display text-6xl font-bold leading-none">One marketplace.<br/><span className="text-violet-400">Endless finds.</span></h1><p className="mt-6 max-w-xl leading-7 text-slate-300">Discover products from independent sellers with secure checkout and transparent order tracking.</p><a href="#products" className="mt-8 inline-block rounded-2xl bg-white px-6 py-3 font-black text-slate-950">Explore marketplace →</a></div><div className="hidden lg:block"><div className="mx-auto max-w-sm rotate-2 rounded-[40px] border border-white/10 bg-gradient-to-br from-violet-600 to-slate-900 p-8 shadow-2xl"><div className="flex aspect-square flex-col justify-between"><span className="text-xs font-bold text-white/60">SHOPSPHERE / 001</span><span className="font-display text-5xl font-bold">Find your next favorite.</span><span className="text-xs text-white/60">Premium multi-vendor commerce</span></div></div></div></div></section><section id="products" className="container-page py-16"><div className="flex flex-col justify-between gap-4 md:flex-row md:items-end"><div><p className="text-xs font-black uppercase tracking-widest text-violet-600">Curated marketplace</p><h2 className="mt-2 font-display text-4xl font-bold">Featured finds</h2></div><div className="flex gap-2"><input className="input min-w-72" placeholder="Search products…" value={q} onChange={e=>setQ(e.target.value)} onKeyDown={e=>e.key==="Enter"&&load()}/><button className="btn-primary" onClick={load}>Search</button></div></div><div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{p.map(x=><ProductCard key={x._id} product={x}/>)}</div></section></>}
+import { useEffect, useState } from "react";
+import { ArrowRight, ShieldCheck, Store, Zap } from "lucide-react";
+import { Link } from "react-router-dom";
+import api from "../services/api";
+import ProductCard from "../components/ProductCard";
+
+export default function Home() {
+  const [products, setProducts] = useState([]);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const { data } = await api.get("/products");
+        setProducts(data.products || data || []);
+      } catch (err) {
+        setError(
+          err.response?.data?.message ||
+            "Unable to load products."
+        );
+      }
+    };
+
+    load();
+  }, []);
+
+  return (
+    <>
+      <section className="hero">
+        <div className="container hero-grid">
+          <div>
+            <span className="eyebrow">
+              The modern multi-vendor marketplace
+            </span>
+
+            <h1>
+              Discover. <span>Shop.</span> Belong.
+            </h1>
+
+            <p>
+              ShopSphere connects independent sellers with
+              modern shoppers through a fast, secure and
+              beautifully designed marketplace.
+            </p>
+
+            <div className="hero-actions">
+              <Link className="button" to="/products">
+                Explore marketplace
+                <ArrowRight size={17} />
+              </Link>
+
+              <Link
+                className="button secondary"
+                to="/auth?mode=register"
+              >
+                Become a seller
+              </Link>
+            </div>
+          </div>
+
+          <div className="hero-card">
+            <span className="eyebrow">
+              Built for trust
+            </span>
+
+            <h2>
+              One marketplace.
+              <br />
+              Three powerful roles.
+            </h2>
+
+            <p>
+              Buyers shop, sellers grow and administrators
+              operate the platform from one connected system.
+            </p>
+
+            <div className="hero-stat">
+              <strong>3</strong>
+              <span>controlled account roles</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="container">
+          <div className="feature-grid">
+            <div className="feature-card">
+              <ShieldCheck />
+              <h3>Secure checkout</h3>
+              <p>
+                Stripe-powered payment confirmation with
+                signed webhooks.
+              </p>
+            </div>
+
+            <div className="feature-card">
+              <Store />
+              <h3>Independent sellers</h3>
+              <p>
+                Seller-owned catalogs and fulfillment
+                workflows.
+              </p>
+            </div>
+
+            <div className="feature-card">
+              <Zap />
+              <h3>Fast experience</h3>
+              <p>
+                React, Vite and optimized REST APIs for a
+                responsive storefront.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="container">
+          <div className="section-head">
+            <div>
+              <span className="eyebrow">
+                Curated marketplace
+              </span>
+
+              <h2>Featured products</h2>
+            </div>
+
+            <Link to="/products">
+              View all →
+            </Link>
+          </div>
+
+          {error && (
+            <div className="error-message">
+              {error}
+            </div>
+          )}
+
+          <div className="product-grid">
+            {products.slice(0, 8).map((product) => (
+              <ProductCard
+                key={product._id}
+                product={product}
+              />
+            ))}
+          </div>
+
+          {!products.length && !error && (
+            <div className="empty">
+              No products available yet.
+            </div>
+          )}
+        </div>
+      </section>
+    </>
+  );
+}
